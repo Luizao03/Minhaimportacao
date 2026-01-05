@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Speedaf/AGT - Angola</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛠️ Calculadora de Custo e Venda (AOA) - SPEEDAF</h1>
+        
+        <div class="input-group">
+            <label for="cambio">💰 Câmbio USD para AOA (Valor do Dia):</label>
+            <input type="number" id="cambio" value="145.91" step="0.01" min="1" required>
+        </div>
+
+        <h2>📦 Custos e Margem de Lucro</h2>
+        <div class="input-group">
+            <label for="precoProduto">💵 Preço do Produto (Valor FOB em USD):</label>
+            <input type="number" id="precoProduto" value="10" step="0.01" min="0" required>
+        </div>
+        <div class="input-group">
+            <label for="custoEnvio">✈️ Custo de Envio/Frete (em USD):</label>
+            <input type="number" id="custoEnvio" value="5" step="0.01" min="0" required>
+        </div>
+        <div class="input-group">
+            <label for="margemLucro">🎯 Margem de Lucro Desejada (%, Padrão 5%):</label>
+            <input type="number" id="margemLucro" value="5" step="0.1" min="0" required>
+        </div>
+
+        <h2>⚖️ Encargos Aduaneiros (AGT/SPEEDAF)</h2>
+        <div class="taxas-info">
+            <p>1. Taxa Forfetária (Direitos): <strong>16%</strong> (Sobre o FOB) </p>
+            <p>2. IVA (Valor Acrescentado): <strong>14%</strong> (Sobre a Base de Cálculo) </p>
+            <div class="input-group">
+                <label for="nIntervencao">3. N/Intervenção (Taxa Fixa da Speedaf em AOA):</label>
+                <input type="number" id="nIntervencao" value="1950" step="0.01" min="0" required>
+            </div>
+        </div>
+        
+        <button onclick="calcularPreco()">Calcular Preço de Venda</button>
+
+        <div class="resultado">
+            <h2>💰 Resultado do Cálculo</h2>
+            <p>Custo Total (Ponto de Equilíbrio): <span id="custoTotal">0.00 AOA</span></p>
+            <p class="venda-sugerida">Preço de Venda Sugerido: <span id="precoVenda">0.00 AOA</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+          </html>
+                                                                                  
