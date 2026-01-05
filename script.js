@@ -1,3 +1,38 @@
+// --- FUNÇÃO PARA OBTER CÂMBIO AUTOMATICAMENTE ---
+// Usamos uma API estável e gratuita para buscar a taxa de câmbio USD/AOA.
+async function carregarCambioAduaneiro() {
+    const cambioInput = document.getElementById('cambioGoogle');
+    cambioInput.value = "A carregar...";
+
+    // Usaremos a taxa de câmbio do Dólar (USD) para o Kwanza (AOA).
+    // Nota: Esta API pode fornecer uma taxa de mercado, que pode ser diferente da taxa oficial da AGT. 
+    // O usuário deve ter a opção de ajustar o valor após o carregamento.
+    const apiUrl = 'https://api.exchangerate-api.com/v4/latest/USD';
+
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        if (data.rates && data.rates.AOA) {
+            const taxaAOA = data.rates.AOA.toFixed(2); // Arredonda para 2 casas decimais
+            cambioInput.value = taxaAOA;
+            cambioInput.disabled = false; // Desbloqueia para permitir ajustes manuais
+            console.log(`Câmbio USD/AOA carregado: ${taxaAOA}`);
+        } else {
+            cambioInput.value = "840.00"; // Valor de segurança se a API falhar
+            cambioInput.disabled = false;
+        }
+    } catch (error) {
+        console.error("Erro ao buscar a taxa de câmbio:", error);
+        cambioInput.value = "840.00"; // Valor de segurança se a requisição falhar
+        cambioInput.disabled = false;
+        alert("Não foi possível carregar a taxa de câmbio. Usando o valor padrão de 840.00 AOA.");
+    }
+    // Após carregar a taxa, rodamos o cálculo inicial com os valores padrão
+    calcularPreco(); 
+}
+
+// --- FUNÇÃO PRINCIPAL DE CÁLCULO ---
 function calcularPreco() {
     // 1. Obter os valores de entrada
     const cambioAduaneiro = parseFloat(document.getElementById('cambioGoogle').value); // Câmbio do Google/AGT (Base de impostos)
@@ -8,19 +43,23 @@ function calcularPreco() {
     const margemLucroPorcentagem = parseFloat(document.getElementById('margemLucro').value) / 100;
 
     // Constantes de taxas fixas (Baseadas nas imagens da Speedaf/AGT)
-    const taxaForfetaria = 0.16; // 16% Direitos de Importação (sobre o FOB Aduaneiro)
-    const ivaPorcentagem = 0.14; // 14% IVA (sobre a Base de Cálculo)
+    const taxaForfetaria = 0.16; // 16% Direitos de Importação
+    const ivaPorcentagem = 0.14; // 14% IVA
     const nIntervencao = 1950.00; // Taxa Fixa da Speedaf em AOA
 
     // 2. Validação básica dos inputs
     if (isNaN(cambioAduaneiro) || isNaN(custoAquisicao) || isNaN(precoTotalUSD) || isNaN(margemLucroPorcentagem)) {
+        // Se o câmbio for "A carregar...", não alerta e espera
+        if (document.getElementById('cambioGoogle').value === "A carregar...") {
+            return; 
+        }
         alert("Por favor, preencha todos os campos obrigatórios com números válidos.");
         return;
     }
 
     // --- FASE 1: Cálculo dos Impostos (Baseado no Câmbio Aduaneiro) ---
 
-    // 3. 1. Valor Aduaneiro (AOA) - Base para 16%
+    // 3. 1. Valor Aduaneiro (AOA)
     const valorAduaneiro_AOA = precoTotalUSD * cambioAduaneiro; 
     
     // 3. 2. Cálculo da Taxa Forfetária (16%)
@@ -40,6 +79,36 @@ function calcularPreco() {
     const custoRealProdutoEnvio_AOA = precoTotalUSD * custoAquisicao;
     
     // 6. Custo Final (Ponto de Equilíbrio)
+    const custoFinal_AOA = custoRealProdutoEnvio_AOA + totalImpostosTaxas_AOA;
+
+    // --- FASE 3: Cálculo do Preço de Venda Sugerido ---
+    
+    // 7. Preço de Venda Sugerido (com Margem de Lucro)
+    const precoVendaSugerido = custoFinal_AOA * (1 + margemLucroPorcentagem);
+
+    // 8. Exibir os resultados
+    document.getElementById('custoTotal').textContent = formatarAOA(custoFinal_AOA);
+    document.getElementById('precoVenda').textContent = formatarAOA(precoVendaSugerido);
+
+    // Função de formatação para Kwanza
+    function formatarAOA(valor) {
+        return valor.toLocaleString('pt-AO', {
+            style: 'currency',
+            currency: 'AOA',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+}
+
+// Inicializa o carregamento da taxa de câmbio ao carregar a página
+document.addEventListener('DOMContentLoaded', carregarCambioAduaneiro);
+
+// Adiciona um listener para recalcular sempre que um campo for alterado (melhorando a usabilidade)
+document.getElementById('precoTotalUSD').addEventListener('input', calcularPreco);
+document.getElementById('custoAquisicao').addEventListener('input', calcularPreco);
+document.getElementById('margemLucro').addEventListener('input', calcularPreco);
+document.getElementById('cambioGoogle').addEventListener('input', calcularPreco);
     const custoFinal_AOA = custoRealProdutoEnvio_AOA + totalImpostosTaxas_AOA;
 
     // --- FASE 3: Cálculo do Preço de Venda Sugerido ---
